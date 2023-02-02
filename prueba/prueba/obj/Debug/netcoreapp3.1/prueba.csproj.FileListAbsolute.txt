@@ -64,3 +64,8 @@ D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\FluentValidation.dll
 D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\FluentValidation.AspNetCore.dll
 D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\FluentValidation.DependencyInjectionExtensions.dll
 D:\BCP\prueba_bcp\prueba\prueba\obj\Debug\netcoreapp3.1\prueba.MvcApplicationPartsAssemblyInfo.cs
+D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Cryptography.Internal.dll
+D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\Microsoft.Extensions.Identity.Core.dll
+D:\BCP\prueba_bcp\prueba\prueba\bin\Debug\netcoreapp3.1\Microsoft.Extensions.Identity.Stores.dll

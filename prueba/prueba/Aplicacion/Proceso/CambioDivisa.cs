@@ -21,6 +21,7 @@ namespace prueba.Aplicacion.Proceso
             public double monto { get; set; }
             public string monedaOrigen { get; set; }
             public string monedaDestino { get; set; }
+            public string token { get; set; }
         }
 
         public class ManejadorValidacion : AbstractValidator<Respuesta>
@@ -30,6 +31,7 @@ namespace prueba.Aplicacion.Proceso
                 RuleFor(x => x.monto).NotEmpty().NotNull();
                 RuleFor(x => x.monedaOrigen).NotEmpty().NotNull();
                 RuleFor(x => x.monedaDestino).NotEmpty().NotNull();
+                RuleFor(x => x.token).NotEmpty();
             }
         }
 
@@ -46,80 +48,71 @@ namespace prueba.Aplicacion.Proceso
 
             public async Task<MontoSalidaDTO> Handle(Respuesta request, CancellationToken cancellationToken)
             {
-                double montoResultado = 0;
-
-                var IdMonedaOrigen = await _context.Moneda.Where(x => x.nombre == request.monedaOrigen.ToString()).FirstOrDefaultAsync();
-
-                if (IdMonedaOrigen == null)
+                string tokenconfig = _configuration["token"];
+                if (request.token== tokenconfig)
                 {
-                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró la moneda de origen" });
-                }
+                    double montoResultado = 0;
 
-                var IdMonedaDestino = await _context.Moneda.Where(x => x.nombre == request.monedaDestino.ToString()).FirstOrDefaultAsync();
+                    var IdMonedaOrigen = await _context.Moneda.Where(x => x.nombre == request.monedaOrigen.ToString()).FirstOrDefaultAsync();
 
-                if (IdMonedaDestino == null)
-                {
-                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró la moneda de destino" });
-                }
+                    if (IdMonedaOrigen == null)
+                    {
+                        throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró la moneda de origen" });
+                    }
 
-                var TipoDeCambio = await _context.TipoDeCambio.Where(x => x.idMonedaOrigen == IdMonedaOrigen.idMoneda && x.idMonedaDestino == IdMonedaDestino.idMoneda).FirstOrDefaultAsync();
+                    var IdMonedaDestino = await _context.Moneda.Where(x => x.nombre == request.monedaDestino.ToString()).FirstOrDefaultAsync();
 
-                if (TipoDeCambio == null)
-                {
-                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró el tipo de cambio" });
-                }
+                    if (IdMonedaDestino == null)
+                    {
+                        throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró la moneda de destino" });
+                    }
 
-                if (TipoDeCambio.idOperacion.ToString() == Constantes.CompraMayorPeso)
-                {
-                    montoResultado = request.monto * TipoDeCambio.tipoDeCambio;
+                    var TipoDeCambio = await _context.TipoDeCambio.Where(x => x.idMonedaOrigen == IdMonedaOrigen.idMoneda && x.idMonedaDestino == IdMonedaDestino.idMoneda).FirstOrDefaultAsync();
+
+                    if (TipoDeCambio == null)
+                    {
+                        throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se encontró el tipo de cambio" });
+                    }
+
+                    if (TipoDeCambio.idOperacion.ToString() == Constantes.CompraMayorPeso)
+                    {
+                        montoResultado = request.monto * TipoDeCambio.tipoDeCambio;
+                    }
+                    else
+                    {
+                        montoResultado = request.monto / TipoDeCambio.tipoDeCambio;
+                    }
+
+                    var respuesta = new MontoSalidaDTO();
+
+                    respuesta.monto = request.monto;
+                    respuesta.monedaOrigen = request.monedaOrigen;
+                    respuesta.monedaDestino = request.monedaDestino;
+                    respuesta.tipoDeCambio = TipoDeCambio.tipoDeCambio;
+                    respuesta.montoConTipoDeCambio = montoResultado;
+
+                    var consulta = new Consulta
+                    {
+                        monto = respuesta.monto,
+                        idTipoDeCambio = TipoDeCambio.idTipoDeCambio,
+                        fechaCreacion = System.DateTime.Now
+                    };
+
+                    _context.Consulta.Add(consulta);
+
+                    var valor1 = await _context.SaveChangesAsync();
+
+                    if (valor1 > 0)
+                    {
+                        return respuesta;
+                    }
+
+                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se guardaron los cambios" });
                 }
                 else
                 {
-                    montoResultado = request.monto / TipoDeCambio.tipoDeCambio;
-                }
-
-                var respuesta = new MontoSalidaDTO();
-
-                respuesta.monto = request.monto;
-                respuesta.monedaOrigen = request.monedaOrigen;
-                respuesta.monedaDestino = request.monedaDestino;
-                respuesta.tipoDeCambio = TipoDeCambio.tipoDeCambio;
-                respuesta.montoConTipoDeCambio = montoResultado;
-
-                var consulta = new Consulta
-                {
-                    monto = respuesta.monto,
-                    idTipoDeCambio = TipoDeCambio.idTipoDeCambio,
-                    fechaCreacion = System.DateTime.Now
-                };
-
-                _context.Consulta.Add(consulta);
-
-                var valor1 = await _context.SaveChangesAsync();
-
-                if (valor1 > 0)
-                {
-                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se guardaron los cambios" });
-                }
-
-                /*var transaccion = new Transaccion
-                {
-                    monto = respuesta.monto,
-                    montoConTipoDeCambio = respuesta.montoConTipoDeCambio,
-                    idTipoDeCambio = TipoDeCambio.idTipoDeCambio,
-                    fechaCreacion = System.DateTime.Now
-                };
-
-                _context.Transaccion.Add(transaccion);
-
-                var valor = await _context.SaveChangesAsync();
-
-                if (valor > 0)
-                {
-                    //mensaje que no se guardo
-                }*/
-
-                return respuesta;
+                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "El token ingresado es invalido" });
+                }               
             }
         }
     }

@@ -1,5 +1,7 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using prueba.Aplicacion.ManejadorError;
 using prueba.DTO;
 using prueba.Persistencia;
@@ -13,14 +15,17 @@ namespace prueba.Aplicacion.TipoDeCambio
 {
     public class Listar
     {
-        public class ListaTipoDeCambio : IRequest<List<TipoDeCambioDTO>> { }
+        public class ListaTipoDeCambio : IRequest<List<TipoDeCambioDTO>> { 
+        }
 
         public class Manejador : IRequestHandler<ListaTipoDeCambio, List<TipoDeCambioDTO>>
         {
             private readonly CambioDivisaContext _context;
+            private readonly IConfiguration _configuration;
 
-            public Manejador(CambioDivisaContext context)
+            public Manejador(IConfiguration configuration, CambioDivisaContext context)
             {
+                _configuration = configuration;
                 _context = context;
             }
 
