@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
 using MediatR;
+using prueba.Aplicacion.ManejadorError;
 using prueba.Persistencia;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,6 +38,12 @@ namespace prueba.Aplicacion.TipoDeCambio
             public async Task<Unit> Handle(Ejecuta request, CancellationToken cancellationToken)
             {
                 var tipoDeCambio = await _context.TipoDeCambio.FindAsync(request.idTipoDeCambio);
+
+                if (tipoDeCambio == null)
+                {
+                    throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se pudo encontrar el tipo de cambio" });
+                }
+
                 tipoDeCambio.tipoDeCambio = request.tipodeCambio;
 
                 var resultado = await _context.SaveChangesAsync();
@@ -44,7 +52,7 @@ namespace prueba.Aplicacion.TipoDeCambio
                     return Unit.Value;
                 }
 
-                return Unit.Value;
+                throw new ManejadorExcepcion(HttpStatusCode.NotFound, new { mensaje = "No se pudo actualizar el tipo de cambio" });
             }
         }
 
